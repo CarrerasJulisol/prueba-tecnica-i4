@@ -1,0 +1,135 @@
+<%- include('partials/header') %>
+
+<section class="background">
+    <div class="info-user">
+        <img src="/img/default.png" alt="foto de perfil" class="pfp">
+        <p onclick="redirectProfile()" class="username"><%= username %></p>
+    </div>
+
+    <div class="content">
+        <h3 class="title-connect">Conectarse con dispositivo Bluethoot</h3>
+        <p class="info-connect">Para conectarse con el dispositivo Bluethoot es necesario tener activado Bluethoot en el equipo y habilitado en el navegador.</p>
+        <h4 class="search-title">Buscar dispositivos</h4>
+        <button id="search" class="button-search">Buscar</button>
+        
+        <div id="deviceConnected"></div>
+        <div id="deviceBattery"></div>
+        <div id="heartRate"></div>
+        <div id="healthTemperature"></div>
+
+    </div>
+</section>
+
+<script>
+    const { bluetooth } = navigator;
+
+    async function getBluetoothDeviceInfo(device) {
+        // Get the name of the device
+        const name = device.name;
+        console.log(name);
+
+        // Get the battery service of the device and characteristics
+        const serviceBattery = await device.gatt.getPrimaryService('battery_service');
+        const characBattery = await serviceBattery.getCharacteristics();
+        const characBattery1 = await characBattery[0].service.getCharacteristic(characBattery[0].uuid);
+        const dataBattery = await characBattery1.readValue()
+        console.log(dataBattery.getUint8(0))
+        const divA = document.getElementById('deviceBattery')
+        divA.innerHTML = `
+                        <p>Nivel de bateria: ${dataBattery.getUint8(0)} <p>`
+
+
+        // Get device information of the device and characteristics
+        const serviceDevice = await device.gatt.getPrimaryService('device_information');
+        const characDevice = await serviceDevice.getCharacteristics();
+        const characDevice1 = await characDevice[0].service.getCharacteristic(characDevice[0].uuid);
+        const dataDevice1 = await characDevice1.readValue()
+        // Transform data into string
+        const string = new TextDecoder("utf-8").decode(dataDevice1.buffer);
+        console.log(string)
+    
+        const characDevice2 = await characDevice[1].service.getCharacteristic(characDevice[1].uuid);
+        const dataDevice2 = await characDevice2.readValue()
+        const string2 = new TextDecoder("utf-8").decode(dataDevice2.buffer);
+        console.log(string2)
+        
+        const characDevice3 = await characDevice[2].service.getCharacteristic(characDevice[2].uuid);
+        const dataDevice3 = await characDevice3.readValue()
+        const string3 = new TextDecoder("utf-8").decode(dataDevice3.buffer);
+        console.log(string3)
+
+        const div = document.getElementById('deviceConnected')
+        div.innerHTML = `
+                        <p>Nombre dipositivo: ${string} <p>
+                        <p>Modelo: ${string2} <p>
+                        <p>Fabricante: ${string3} <p> `
+
+        // Get the current time service of the device and characteristics
+        const serviceTime = await device.gatt.getPrimaryService('current_time');
+        console.log(serviceTime);
+        const characTime = await serviceTime.getCharacteristics();
+        console.log(characTime);
+        const characTime1 = await characTime[0].service.getCharacteristic(characTime[0].uuid);
+        const dataTime = await characTime1.readValue()
+        const string4 = new TextDecoder("utf-8").decode(dataTime.buffer);
+        console.log(string4)
+
+        // Get the heart rate service of the device and characteristics
+        const serviceHeart = await device.gatt.getPrimaryService('heart_rate');
+        console.log(serviceHeart);
+        const characHeart = await serviceHeart.getCharacteristics();
+        console.log(characHeart);
+        const characHeart1 = await characHeart[0].service.getCharacteristic(characHeart[0].uuid);
+        // Get notifications
+        characHeart1.startNotifications()
+        console.log(`Notifications for ${characHeart[0].uuid} have been started.`);
+        characHeart1.addEventListener('characteristicvaluechanged', (event) => {
+            const value = event.target.value.getUint8(0);
+            const string5 = new TextDecoder("utf-8").decode(event.target.value);
+            console.log(`Notificacion recibida de Frecuencia cardiaca: ${string5}.`)
+            const div = document.getElementById('heartRate')
+            div.innerHTML = `
+                            <p>Frecuencia cardiaca: ${string5} <p> `
+        })
+
+        // Get the health thermometer of the device and characteristics
+        const serviceThermometer = await device.gatt.getPrimaryService('health_thermometer');
+        console.log(serviceThermometer);
+        const characThermometer = await serviceThermometer.getCharacteristics();
+        console.log(characThermometer);
+        const characThermometer1 = await characThermometer[0].service.getCharacteristic(characThermometer[0].uuid);
+        // Get notifications
+        characThermometer1.startNotifications()
+        console.log(`Notifications for ${characThermometer[0].uuid} have been started.`);
+        characThermometer1.addEventListener('characteristicvaluechanged', (event) => {
+            const value = event.target.value.getUint8(0);
+            console.log(`Notificacion recibida de Temperatura corporal: ${value}.`)
+            const div = document.getElementById('healthTemperature')
+            div.innerHTML = `
+                            <p>Temperatura corporal: ${value} °C<p> `
+        })
+    }
+
+    // Create a function to connect to a Bluetooth device and display information
+    async function connectToBluetoothDevice() {
+        const device = await bluetooth.requestDevice({
+            acceptAllDevices:true,
+            optionalServices:['battery_service','heart_rate','current_time','device_information','health_thermometer']
+        })
+        // Try to connect to the device
+        await device.gatt.connect().then(() => {
+            // Get information about the device
+            const deviceInfo = getBluetoothDeviceInfo(device);
+        })
+    }
+
+    // Create a button that will call the connectToBluetoothDevice function when clicked
+    const connectButton = document.getElementById("search");
+    connectButton.addEventListener("click", connectToBluetoothDevice);
+    
+    function redirectProfile(){
+        console.log("click")
+        window.location.replace('/account/profile');
+    }
+
+</script>

@@ -1,0 +1,47 @@
+<%- include('partials/header') %>
+
+<section class="section-sign">
+    <div class="container">
+        
+        <div class="form-container">
+            <h2 class="title">Iniciar Sesion</h2>
+
+            <div>
+                <form id="loginForm" class="form-login">
+                    <input id="username" name="username" class="complete" placeholder="Usuario"></input>
+                    <input type="password" id="password" name="password" class="complete" placeholder="Contraseña"></input>
+                    <input type="submit" class="button-ok" value="Iniciar Sesión">
+                    <button class="redirect" onclick="singup()">Registrarme</button>
+                </form>
+                
+            </div>
+        </div>
+        
+    </div>
+</section>
+
+
+<script>
+    const form = document.getElementById('loginForm');
+
+    form.addEventListener('submit',evt=>{
+        evt.preventDefault();
+        let data = new FormData(form);
+        let obj = {};
+        data.forEach((value,key)=>obj[key]=value);
+        fetch('/account/login',{
+            method:'POST',
+            body:JSON.stringify(obj),
+            headers:{
+                "Content-Type":"application/json"
+            }
+        }).then(res=>{
+            console.log(res)
+            window.location.replace('/home')
+        })
+    })
+
+    function singup(){
+        window.location.replace('/account/singup')
+    }
+</script>

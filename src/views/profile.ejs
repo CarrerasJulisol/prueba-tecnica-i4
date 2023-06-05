@@ -1,0 +1,98 @@
+<%- include('partials/header') %>
+
+<section class="profile-section">
+    <div class="menu">
+        <li onclick="redirectHome()" class="list-style">Home</li>
+        <li onclick="logout()" class="list-style">Cerrar Sesion</li>
+    </div>
+
+    <div>
+        <form id="editForm" action="submit" class="container-edit-form">
+            <div>
+                <label for="" class="label-style">Usuario</label><img src="/img/pencil.png" alt="cambiar nombre de usuario" class="edit-icon" id="data1">
+            </div>
+            <input id="username" name="username" class="complete" placeholder="<%= user.username %>" readonly></input>            
+            
+            <div>
+                <label for="" class="label-style">Correo Electronico</label><img src="/img/pencil.png" alt="cambiar correo electronico" class="edit-icon"id="data2">
+            </div>
+            <input id="email" name="email" class="complete" placeholder="<%= user.email %>"readonly></input>
+            
+            <div>
+                <label for="" class="label-style">Nombre</label><img src="/img/pencil.png" alt="cambiar nombre" class="edit-icon"id="data3">
+            </div>
+            <input id="name" name="name" class="complete" placeholder="<%= user.name %>"readonly></input>
+
+            <div>
+                <label for="" class="label-style">Apellido</label><img src="/img/pencil.png" alt="cambiar apellido" class="edit-icon"id="data4">
+            </div> 
+            <input id="lastname" name="lastname" class="complete" placeholder="<%= user.lastname %>"readonly></input>
+            
+
+            <input type="submit" class="button-ok" value="Cambiar" id="button-change">
+        </form>
+    </div>
+
+    <div>
+        <img src="/img/default.png" alt="">
+    </div>
+</section>
+
+<script>
+    const form = document.getElementById('editForm');
+    const inputs = ['username', 'email', 'name', 'lastname'];
+    const dataButtons = ['data1', 'data2', 'data3', 'data4'];
+    const change = document.getElementById('button-change');
+    const submitButton = form.querySelector('button[type="submit"]');
+
+    dataButtons.forEach((dataButton, index) => {
+        const input = document.getElementById(inputs[index]);
+        const button = document.getElementById(dataButton);
+
+        button.addEventListener('click', () => {
+            input.removeAttribute('readonly');
+            input.classList.add('change-color');
+            change.classList.add('change');
+        })
+    });
+
+    form.addEventListener('submit',evt=>{
+        evt.preventDefault();
+        let data = new FormData(form);
+        let obj = {};
+        let hasFilledField = false;
+        data.forEach((value,key)=>{
+            if(value.trim()!==''){
+                obj[key]=value;
+                hasFilledField = true;
+            }
+            
+        });
+        if (hasFilledField) {
+            fetch('/account/profile', {
+                method: 'POST',
+                body: JSON.stringify(obj),
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            })
+            .then(result => result.json())
+            .then(json => {
+                console.log(json);
+                window.location.href = '/account/profile';
+            });
+        } else {
+            alert('Debe llenar al menos un campo');
+        }
+    })
+
+    function redirectHome(){
+        console.log("click")
+        window.location.replace('/home');
+    }
+
+    function logout(){
+        console.log("click")
+        window.location.replace('/account/logout');
+    }
+</script>
